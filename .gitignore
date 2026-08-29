@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+output/reports/*.csv
+output/reports/*.html
+!output/reports/.gitkeep
+.DS_Store
