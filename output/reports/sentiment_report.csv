@@ -1,0 +1,2 @@
+employee_id,original_text,processed_text,classification,compound,positive,negative,neutral
+,I am very happy with my work environment and my team.,happy work environment team,Positive,0.6115,0.285,0.0,0.715
