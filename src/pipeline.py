@@ -44,6 +44,15 @@ def _enrich_record(record: dict) -> dict:
     }
 
 
+def _enrich_record_with_emotion(record: dict, model, tokenizer, threshold: float) -> dict:
+    """Reuse Milestone 1 processing, then add dynamic transformer emotion output."""
+    from src.emotion import predict_text
+    enriched = _enrich_record(record)
+    enriched["emotion"] = predict_text(model, tokenizer, enriched["original_text"], threshold)
+    enriched["emotion_model"] = getattr(getattr(model, "config", None), "model_type", "transformer")
+    return enriched
+
+
 def run_from_records(records: list, csv_path, html_path=None) -> dict:
     """Run preprocessing -> sentiment -> report for a list of standardized records."""
     if not records:
@@ -55,6 +64,27 @@ def run_from_records(records: list, csv_path, html_path=None) -> dict:
     result = report.generate_report(enriched, csv_path, html_path)
     logger.info("Report generated. Summary: %s", result["summary"])
     return result
+
+
+def run_from_records_with_emotion(records: list, csv_path, html_path, model, tokenizer,
+                                  threshold: float = 0.5) -> dict:
+    """Complete Milestone 1 -> Milestone 2 workflow; invalid records never reach it."""
+    if not records:
+        raise ValueError("Pipeline received no records to process.")
+    enriched = [_enrich_record_with_emotion(record, model, tokenizer, threshold) for record in records]
+    return report.generate_report(enriched, csv_path, html_path)
+
+
+def run_manual_with_emotion(text: str, csv_path, html_path, model, tokenizer, threshold: float = 0.5) -> dict:
+    return run_from_records_with_emotion([ingestion.ingest_manual(text)], csv_path, html_path, model, tokenizer, threshold)
+
+
+def run_txt_with_emotion(path, csv_path, html_path, model, tokenizer, threshold: float = 0.5) -> dict:
+    return run_from_records_with_emotion(ingestion.ingest_txt(path), csv_path, html_path, model, tokenizer, threshold)
+
+
+def run_csv_with_emotion(path, csv_path, html_path, model, tokenizer, threshold: float = 0.5) -> dict:
+    return run_from_records_with_emotion(ingestion.ingest_csv(path), csv_path, html_path, model, tokenizer, threshold)
 
 
 def run_manual(text: str, csv_path, html_path=None) -> dict:
